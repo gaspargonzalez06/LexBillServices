@@ -1,0 +1,668 @@
+﻿@*@model LexBillServicesApp.Models.Pedido
+
+    @{
+        ViewBag.Title = "Crear Pedido";
+    }
+
+    <h2>Crear Pedido</h2>
+
+    @using (Html.BeginForm("Create", "Pedidos", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4>Seleccionar Cliente</h4>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.ClienteID, "Cliente", htmlAttributes: new { @class = "control-label" })
+                        @Html.DropDownListFor(model => model.ClienteID, ViewBag.Clientes as SelectList, "-- Seleccionar Cliente --", htmlAttributes: new { @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.ClienteID, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Productos</h4>
+                    <div style="height: 300px; overflow-y: auto;">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Precio</th>
+                                    <th>Cantidad</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var producto in ViewBag.Productos)
+                                {
+                                    <tr>
+                                        <td>@producto.Nombre</td>
+                                        <td>@producto.Precio.ToString("C")</td>
+                                        <td>
+                                            <input type="number" class="form-control cantidad-producto" name="detallePedidos[@producto.ProductoID]" data-producto-id="@producto.ProductoID" min="1" value="1" />
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary agregar-producto" data-producto-id="@producto.ProductoID" data-producto-nombre="@producto.Nombre" data-producto-precio="@producto.Precio">Agregar</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4>Detalle del Pedido</h4>
+                    <div style="height: 300px; overflow-y: auto;">
+                        <table class="table table-striped" id="detalle-pedido">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Unitario</th>
+                                    <th>Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="fixed-bottom-right">
+                        <div class="total-section">
+                            <p>Total antes de ITBMS: <span id="total-sin-itbms">0.00</span></p>
+                            <p>ITBMS (7%): <span id="itbms">0.00</span></p>
+                            <p>Total: <span id="total">0.00</span></p>
+                            @Html.Hidden("TotalSinITBMS", "0.00", new { id = "total-sin-itbms-hidden" })
+                            @Html.Hidden("ITBMS", "0.00", new { id = "itbms-hidden" })
+                            @Html.Hidden("Total", "0.00", new { id = "total-hidden" })
+                            @Html.Hidden("DetallePedidos", "", new { id = "detalle-pedidos-hidden" })
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Pedido</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @section Scripts {
+        @Scripts.Render("~/bundles/jqueryval")
+        <script>
+            $(document).ready(function () {
+                const detallePedidos = [];
+
+                function calcularTotales() {
+                    let totalSinITBMS = 0;
+                    $("#detalle-pedido tbody tr").each(function () {
+                        const subtotal = parseFloat($(this).find(".subtotal").text());
+                        totalSinITBMS += subtotal;
+                    });
+                    const itbms = totalSinITBMS * 0.07;
+                    const total = totalSinITBMS + itbms;
+
+                    $("#total-sin-itbms").text(totalSinITBMS.toFixed(2));
+                    $("#itbms").text(itbms.toFixed(2));
+                    $("#total").text(total.toFixed(2));
+
+                    // Actualizar campos ocultos con los valores calculados
+                    $("#total-sin-itbms-hidden").val(totalSinITBMS.toFixed(2));
+                    $("#itbms-hidden").val(itbms.toFixed(2));
+                    $("#total-hidden").val(total.toFixed(2));
+                }
+
+                $(".agregar-producto").click(function () {
+                    const productoID = $(this).data("producto-id");
+                    const productoNombre = $(this).data("producto-nombre");
+                    const productoPrecio = parseFloat($(this).data("producto-precio"));
+                    const cantidad = parseInt($(`.cantidad-producto[data-producto-id="${productoID}"]`).val());
+
+                    // Crear un objeto de detalle de pedido para este producto
+                    const detallePedido = {
+                        ProductoID: productoID,
+                        Cantidad: cantidad,
+                        PrecioUnitario: productoPrecio,
+                        Subtotal: productoPrecio * cantidad  // Agregar el subtotal calculado
+                    };
+
+                    // Agregar este objeto de detalle de pedido a un array
+                    detallePedidos.push(detallePedido);
+
+                    // Imprimir en consola para depuración
+                    console.log("Producto agregado:", detallePedido);
+
+                    // Verificar si el producto ya está en el detalle
+                    const $existingRow = $(`#detalle-pedido tbody tr[data-producto-id="${productoID}"]`);
+                    if ($existingRow.length > 0) {
+                        // Producto ya existe, actualizar cantidad y subtotal
+                        const cantidadActual = parseInt($existingRow.find(".cantidad-detalle").val()) + cantidad;
+                        $existingRow.find(".cantidad-detalle").val(cantidadActual);
+                        const subtotal = cantidadActual * productoPrecio;
+                        $existingRow.find(".subtotal").text(subtotal.toFixed(2));
+                    } else {
+                        // Producto nuevo, agregar a detalle
+                        const newRow = `
+                                    <tr data-producto-id="${productoID}">
+                                        <td>${productoNombre}</td>
+                                        <td><input type="number" class="form-control cantidad-detalle" name="detallePedidos[${productoID}]" value="${cantidad}" min="1" /></td>
+                                        <td>${productoPrecio.toFixed(2)}</td>
+                                        <td class="subtotal">${(productoPrecio * cantidad).toFixed(2)}</td>
+                                        <td><button type="button" class="btn btn-danger eliminar-producto">Eliminar</button></td>
+                                    </tr>`;
+                        $("#detalle-pedido tbody").append(newRow);
+                    }
+
+                    calcularTotales();
+                });
+
+                $(document).on("click", ".eliminar-producto", function () {
+                    $(this).closest("tr").remove();
+                    calcularTotales();
+                });
+
+                $(document).on("change", ".cantidad-detalle", function () {
+                    const cantidad = parseInt($(this).val());
+                    const precioUnitario = parseFloat($(this).closest("tr").find("td:nth-child(3)").text());
+                    const subtotal = cantidad * precioUnitario;
+                    $(this).closest("tr").find(".subtotal").text(subtotal.toFixed(2));
+                    calcularTotales();
+                });
+
+                // Cuando el formulario se envíe, convertir el array de objetos de detalle de pedido a una cadena JSON
+                $("form").submit(function () {
+                    const detallePedidosJson = JSON.stringify(detallePedidos);
+                    console.log("Detalle de Pedidos JSON:", detallePedidosJson); // Imprimir detalle de pedidos antes de enviar el formulario
+                    $("#detalle-pedidos-hidden").val(detallePedidosJson);
+                });
+            });
+        </script>
+    }*@
+
+
+
+@*Segunda version ultima*@
+@*@model LexBillServicesApp.Models.Pedido
+
+    @{
+        ViewBag.Title = "Crear Pedido";
+    }
+
+    <h2>Crear Pedido</h2>
+
+    @using (Html.BeginForm("Create", "Pedidos", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4>Seleccionar Cliente</h4>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.ClienteID, "Cliente", htmlAttributes: new { @class = "control-label" })
+                        @Html.DropDownListFor(model => model.ClienteID, ViewBag.Clientes as SelectList, "-- Seleccionar Cliente --", htmlAttributes: new { @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.ClienteID, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Productos</h4>
+                    <div style="height: 300px; overflow-y: auto;">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Precio</th>
+                                    <th>Cantidad</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var producto in ViewBag.Productos)
+                                {
+                                    <tr>
+                                        <td>@producto.Nombre</td>
+                                        <td>@producto.Precio.ToString("C")</td>
+                                        <td>
+                                            <input type="number" class="form-control cantidad-producto" name="detallePedidos[@producto.ProductoID]" data-producto-id="@producto.ProductoID" min="1" value="1" />
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary agregar-producto" data-producto-id="@producto.ProductoID" data-producto-nombre="@producto.Nombre" data-producto-precio="@producto.Precio">Agregar</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4>Detalle del Pedido</h4>
+                    <div style="height: 300px; overflow-y: auto;">
+                        <table class="table table-striped" id="detalle-pedido">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Unitario</th>
+                                    <th>Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="fixed-bottom-right">
+                        <div class="total-section">
+                            <p>Total antes de ITBMS: <span id="total-sin-itbms">0.00</span></p>
+                            <p>ITBMS (7%): <span id="itbms">0.00</span></p>
+                            <p>Total: <span id="total">0.00</span></p>
+                            @Html.Hidden("TotalSinITBMS", "0.00", new { id = "total-sin-itbms-hidden" })
+                            @Html.Hidden("ITBMS", "0.00", new { id = "itbms-hidden" })
+                            @Html.Hidden("Total", "0.00", new { id = "total-hidden" })
+                            @Html.Hidden("DetallePedidos", "", new { id = "detalle-pedidos-hidden" })
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Pedido</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @section Scripts {
+        @Scripts.Render("~/bundles/jqueryval")
+        <script>
+            $(document).ready(function () {
+                const detallePedidos = [];
+
+                function calcularTotales() {
+                    let totalSinITBMS = 0;
+                    $("#detalle-pedido tbody tr").each(function () {
+                        const subtotal = parseFloat($(this).find(".subtotal").text());
+                        totalSinITBMS += subtotal;
+                    });
+                    const itbms = totalSinITBMS * 0.07;
+                    const total = totalSinITBMS + itbms;
+
+                    $("#total-sin-itbms").text(totalSinITBMS.toFixed(2));
+                    $("#itbms").text(itbms.toFixed(2));
+                    $("#total").text(total.toFixed(2));
+
+                    // Actualizar campos ocultos con los valores calculados
+                    $("#total-sin-itbms-hidden").val(totalSinITBMS.toFixed(2));
+                    $("#itbms-hidden").val(itbms.toFixed(2));
+                    $("#total-hidden").val(total.toFixed(2));
+                }
+
+                $(".agregar-producto").click(function () {
+                    const productoID = $(this).data("producto-id");
+                    const productoNombre = $(this).data("producto-nombre");
+                    const productoPrecio = parseFloat($(this).data("producto-precio"));
+                    const cantidad = parseInt($(`.cantidad-producto[data-producto-id="${productoID}"]`).val());
+
+                    // Crear un objeto de detalle de pedido para este producto
+                    const detallePedido = {
+                        ProductoID: productoID,
+                        Cantidad: cantidad,
+                        PrecioUnitario: productoPrecio
+                    };
+
+                    // Agregar este objeto de detalle de pedido a un array
+                    detallePedidos.push(detallePedido);
+
+                    // Verificar si el producto ya está en el detalle
+                    const $existingRow = $(`#detalle-pedido tbody tr[data-producto-id="${productoID}"]`);
+                    if ($existingRow.length > 0) {
+                        // Producto ya existe, actualizar cantidad y subtotal
+                        const cantidadActual = parseInt($existingRow.find(".cantidad-detalle").val()) + cantidad;
+                        $existingRow.find(".cantidad-detalle").val(cantidadActual);
+                        const subtotal = cantidadActual * productoPrecio;
+                        $existingRow.find(".subtotal").text(subtotal.toFixed(2));
+                    } else {
+                        // Producto nuevo, agregar a detalle
+                        const subtotal = productoPrecio * cantidad;
+                        const newRow = `
+                                    <tr data-producto-id="${productoID}">
+                                        <td>${productoNombre}</td>
+                                        <td><input type="number" class="form-control cantidad-detalle" name="detallePedidos[${productoID}]" value="${cantidad}" min="1" /></td>
+                                        <td>${productoPrecio.toFixed(2)}</td>
+                                        <td class="subtotal">${subtotal.toFixed(2)}</td>
+                                        <td><button type="button" class="btn btn-danger eliminar-producto">Eliminar</button></td>
+                                    </tr>`;
+                        $("#detalle-pedido tbody").append(newRow);
+                    }
+
+                    calcularTotales();
+                });
+
+                $(document).on("click", ".eliminar-producto", function () {
+                    $(this).closest("tr").remove();
+                    calcularTotales();
+                });
+
+                $(document).on("change", ".cantidad-detalle", function () {
+                    const cantidad = parseInt($(this).val());
+                    const precioUnitario = parseFloat($(this).closest("tr").find("td:nth-child(3)").text());
+                    const subtotal = cantidad * precioUnitario;
+                    $(this).closest("tr").find(".subtotal").text(subtotal.toFixed(2));
+                    calcularTotales();
+                });
+
+                // Cuando el formulario se envíe, convertir el array de objetos de detalle de pedido a una cadena JSON
+                $("form").submit(function () {
+                    const detallePedidosJson = JSON.stringify(detallePedidos);
+                    $("#detalle-pedidos-hidden").val(detallePedidosJson);
+                });
+            });
+        </script>
+    }*@
+
+@*@model LexBillServicesApp.Models.Pedido
+
+    @{
+        ViewBag.Title = "Crear Pedido";
+    }
+
+    <h2>Crear Pedido</h2>
+
+    @using (Html.BeginForm("Create", "Pedidos", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4>Seleccionar Cliente</h4>
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.ClienteID, "Cliente", htmlAttributes: new { @class = "control-label" })
+                        @Html.DropDownListFor(model => model.ClienteID, ViewBag.Clientes as SelectList, "-- Seleccionar Cliente --", htmlAttributes: new { @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.ClienteID, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Productos</h4>
+                    <div style="height: 300px; overflow-y: auto;">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Precio</th>
+                                    <th>Cantidad</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var producto in ViewBag.Productos)
+                                {
+                                    <tr>
+                                        <td>@producto.Nombre</td>
+                                        <td>@producto.Precio.ToString("C")</td>
+                                        <td>
+                                            <input type="number" class="form-control cantidad-producto" name="detallePedidos[@producto.ProductoID]" data-producto-id="@producto.ProductoID" min="1" value="1" />
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary agregar-producto" data-producto-id="@producto.ProductoID" data-producto-nombre="@producto.Nombre" data-producto-precio="@producto.Precio">Agregar</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h4>Detalle del Pedido</h4>
+                    <div style="height: 300px; overflow-y: auto;">
+                        <table class="table table-striped" id="detalle-pedido">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Unitario</th>
+                                    <th>Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="fixed-bottom-right">
+                        <div class="total-section">
+                            <p>Total antes de ITBMS: <span id="total-sin-itbms">0.00</span></p>
+                            <p>ITBMS (7%): <span id="itbms">0.00</span></p>
+                            <p>Total: <span id="total">0.00</span></p>
+                            @Html.Hidden("TotalSinITBMS", "0.00", new { id = "total-sin-itbms-hidden" })
+                            @Html.Hidden("ITBMS", "0.00", new { id = "itbms-hidden" })
+                            @Html.Hidden("Total", "0.00", new { id = "total-hidden" })
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Pedido</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @section Scripts {
+        @Scripts.Render("~/bundles/jqueryval")
+        <script>
+            $(document).ready(function () {
+                function calcularTotales() {
+                    let totalSinITBMS = 0;
+                    $("#detalle-pedido tbody tr").each(function () {
+                        const subtotal = parseFloat($(this).find(".subtotal").text());
+                        totalSinITBMS += subtotal;
+                    });
+                    const itbms = totalSinITBMS * 0.07;
+                    const total = totalSinITBMS + itbms;
+
+                    $("#total-sin-itbms").text(totalSinITBMS.toFixed(2));
+                    $("#itbms").text(itbms.toFixed(2));
+                    $("#total").text(total.toFixed(2));
+
+                    // Actualizar campos ocultos con los valores calculados
+                    $("#total-sin-itbms-hidden").val(totalSinITBMS.toFixed(2));
+                    $("#itbms-hidden").val(itbms.toFixed(2));
+                    $("#total-hidden").val(total.toFixed(2));
+                }
+
+                $(".agregar-producto").click(function () {
+                    const productoID = $(this).data("producto-id");
+                    const productoNombre = $(this).data("producto-nombre");
+                    const productoPrecio = parseFloat($(this).data("producto-precio"));
+                    const cantidad = parseInt($(`.cantidad-producto[data-producto-id="${productoID}"]`).val());
+
+                    // Verificar si el producto ya está en el detalle
+                    const $existingRow = $(`#detalle-pedido tbody tr[data-producto-id="${productoID}"]`);
+                    if ($existingRow.length > 0) {
+                        // Producto ya existe, actualizar cantidad y subtotal
+                        const cantidadActual = parseInt($existingRow.find(".cantidad-detalle").val()) + cantidad;
+                        $existingRow.find(".cantidad-detalle").val(cantidadActual);
+                        const subtotal = cantidadActual * productoPrecio;
+                        $existingRow.find(".subtotal").text(subtotal.toFixed(2));
+                    } else {
+                        // Producto nuevo, agregar a detalle
+                        const subtotal = productoPrecio * cantidad;
+                        const newRow = `
+                                <tr data-producto-id="${productoID}">
+                                    <td>${productoNombre}</td>
+                                    <td><input type="number" class="form-control cantidad-detalle" name="detallePedidos[${productoID}]" value="${cantidad}" min="1" /></td>
+                                    <td>${productoPrecio.toFixed(2)}</td>
+                                    <td class="subtotal">${subtotal.toFixed(2)}</td>
+                                    <td><button type="button" class="btn btn-danger eliminar-producto">Eliminar</button></td>
+                                </tr>`;
+                        $("#detalle-pedido tbody").append(newRow);
+                    }
+
+                    calcularTotales();
+                });
+
+                $(document).on("click", ".eliminar-producto", function () {
+                    $(this).closest("tr").remove();
+                    calcularTotales();
+                });
+
+                $(document).on("change", ".cantidad-detalle", function () {
+                    const cantidad = parseInt($(this).val());
+                    const precioUnitario = parseFloat($(this).closest("tr").find("td:nth-child(3)").text());
+                    const subtotal = cantidad * precioUnitario;
+                    $(this).closest("tr").find(".subtotal").text(subtotal.toFixed(2));
+                    calcularTotales();
+                });
+            });
+        </script>
+    }*@
+@model LexBillServicesApp.Models.Pedido
+
+@{
+    ViewBag.Title = "Crear Pedido";
+}
+
+<h2>Crear Pedido</h2>
+
+@using (Html.BeginForm("Create", "Pedidos", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h4>Seleccionar Cliente</h4>
+                <div class="form-group">
+                    @Html.LabelFor(model => model.ClienteID, "Cliente", htmlAttributes: new { @class = "control-label" })
+                    @Html.DropDownList("ClienteID", ViewBag.Clientes as SelectList, "-- Seleccionar Cliente --", htmlAttributes: new { @class = "form-control" })
+                    @Html.ValidationMessageFor(model => model.ClienteID, "", new { @class = "text-danger" })
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Productos</h4>
+                <div style="height: 300px; overflow-y: auto;">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Cantidad</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var producto in ViewBag.Productos)
+                            {
+                                <tr>
+                                    <td>@producto.Nombre</td>
+                                    <td>@producto.Precio.ToString("C")</td>
+                                    <td>
+                                        <input type="number" class="form-control cantidad-producto" name="detallePedidos[@producto.ProductoID]" data-producto-id="@producto.ProductoID" min="1" value="1" />
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-primary agregar-producto" data-producto-id="@producto.ProductoID" data-producto-nombre="@producto.Nombre" data-producto-precio="@producto.Precio">Agregar</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h4>Detalle del Pedido</h4>
+                <div style="height: 300px; overflow-y: auto;">
+                    <table class="table table-striped" id="detalle-pedido">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Precio Unitario</th>
+                                <th>Subtotal</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="fixed-bottom-right">
+                    <div class="total-section">
+                        <p>Total antes de ITBMS: <span id="total-sin-itbms">0.00</span></p>
+                        <p>ITBMS (7%): <span id="itbms">0.00</span></p>
+                        <p>Total: <span id="total">0.00</span></p>
+                        @Html.Hidden("TotalSinITBMS", "0.00", new { id = "total-sin-itbms-hidden" })
+                        @Html.Hidden("ITBMS", "0.00", new { id = "itbms-hidden" })
+                        @Html.Hidden("Total", "0.00", new { id = "total-hidden" })
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar Pedido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        $(document).ready(function () {
+            function calcularTotales() {
+                let totalSinITBMS = 0;
+                $("#detalle-pedido tbody tr").each(function () {
+                    const subtotal = parseFloat($(this).find(".subtotal").text());
+                    totalSinITBMS += subtotal;
+                });
+                const itbms = totalSinITBMS * 0.07;
+                const total = totalSinITBMS + itbms;
+
+                $("#total-sin-itbms").text(totalSinITBMS.toFixed(2));
+                $("#itbms").text(itbms.toFixed(2));
+                $("#total").text(total.toFixed(2));
+
+                // Actualizar campos ocultos con los valores calculados
+                $("#total-sin-itbms-hidden").val(totalSinITBMS.toFixed(2));
+                $("#itbms-hidden").val(itbms.toFixed(2));
+                $("#total-hidden").val(total.toFixed(2));
+            }
+
+            $(".agregar-producto").click(function () {
+                const productoID = $(this).data("producto-id");
+                const productoNombre = $(this).data("producto-nombre");
+                const productoPrecio = parseFloat($(this).data("producto-precio"));
+                const cantidad = parseInt($(`.cantidad-producto[data-producto-id="${productoID}"]`).val());
+
+                // Verificar si el producto ya está en el detalle
+                const $existingRow = $(`#detalle-pedido tbody tr[data-producto-id="${productoID}"]`);
+                if ($existingRow.length > 0) {
+                    // Producto ya existe, actualizar cantidad y subtotal
+                    const cantidadActual = parseInt($existingRow.find(".cantidad-detalle").val()) + cantidad;
+                    $existingRow.find(".cantidad-detalle").val(cantidadActual);
+                    const subtotal = cantidadActual * productoPrecio;
+                    $existingRow.find(".subtotal").text(subtotal.toFixed(2));
+                } else {
+                    // Producto nuevo, agregar a detalle
+                    const subtotal = productoPrecio * cantidad;
+                    const newRow = `
+                                <tr data-producto-id="${productoID}">
+                                    <td>${productoNombre}</td>
+                                    <td><input type="number" class="form-control cantidad-detalle" name="detallePedidos[${productoID}]" value="${cantidad}" min="1" readonly /></td>
+                                    <td>${productoPrecio.toFixed(2)}</td>
+                                    <td class="subtotal">${subtotal.toFixed(2)}</td>
+                                    <td><button type="button" class="btn btn-danger eliminar-producto" data-producto-id="${productoID}">Eliminar</button></td>
+                                </tr>
+                            `;
+                    $("#detalle-pedido tbody").append(newRow);
+                }
+
+                // Calcular totales
+                calcularTotales();
+            });
+
+            $("#detalle-pedido").on("click", ".eliminar-producto", function () {
+                $(this).closest("tr").remove();
+                calcularTotales();
+            });
+
+            // Calcular totales al cargar la página
+            calcularTotales();
+        });
+    </script>
+}

@@ -1,0 +1,109 @@
+﻿@*@model IEnumerable<LexBillServicesApp.Models.Cliente>
+
+    @{
+        ViewBag.Title = "Lista de Clientes";
+    }
+
+    <h2>Lista de Clientes</h2>
+
+    <p>
+        @Html.ActionLink("Crear Nuevo Cliente", "Create", null, new { @class = "btn btn-primary" })
+    </p>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Dirección</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Fecha de Registro</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cliente in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => cliente.Nombre)</td>
+                    <td>@Html.DisplayFor(modelItem => cliente.Apellido)</td>
+                    <td>@Html.DisplayFor(modelItem => cliente.Direccion)</td>
+                    <td>@Html.DisplayFor(modelItem => cliente.Telefono)</td>
+                    <td>@Html.DisplayFor(modelItem => cliente.Email)</td>
+                    <td>@Html.DisplayFor(modelItem => cliente.FechaRegistro)</td>
+                    <td>
+                        @Html.ActionLink("Editar", "Edit", new { id = cliente.ClienteID }, new { @class = "btn btn-warning" }) |
+                        @Html.ActionLink("Eliminar", "Delete", new { id = cliente.ClienteID }, new { @class = "btn btn-danger" })
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>*@
+
+@model IEnumerable<LexBillServicesApp.Models.Cliente>
+
+@{
+    ViewBag.Title = "Lista de Clientes";
+}
+
+<h2>Lista de Clientes</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <p>
+            @Html.ActionLink("Crear Nuevo Cliente", "Create", null, new { @class = "btn btn-primary" })
+        </p>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group pull-right">
+            <input type="text" id="searchInput" class="form-control" placeholder="Buscar por nombre...">
+        </div>
+    </div>
+</div>
+
+<table id="clientesTable" class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Fecha de Registro</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var cliente in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => cliente.Nombre)</td>
+                <td>@Html.DisplayFor(modelItem => cliente.Apellido)</td>
+                <td>@Html.DisplayFor(modelItem => cliente.Direccion)</td>
+                <td>@Html.DisplayFor(modelItem => cliente.Telefono)</td>
+                <td>@Html.DisplayFor(modelItem => cliente.Email)</td>
+                <td>@Html.DisplayFor(modelItem => cliente.FechaRegistro)</td>
+                <td>
+                    @Html.ActionLink("Editar", "Edit", new { id = cliente.ClienteID }, new { @class = "btn btn-warning" }) |
+                    @Html.ActionLink("Eliminar", "Delete", new { id = cliente.ClienteID }, new { @class = "btn btn-danger" })
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            // Filtrar tabla de clientes por nombre al escribir en el campo de búsqueda
+            $('#searchInput').on('keyup', function () {
+                var value = $(this).val().toLowerCase();
+                $('#clientesTable tbody tr').filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+        });
+    </script>
+}
+

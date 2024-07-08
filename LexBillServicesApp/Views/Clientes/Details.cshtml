@@ -1,0 +1,41 @@
+﻿@model LexBillServicesApp.Models.Cliente
+
+@{
+    ViewBag.Title = "Detalles del Cliente";
+}
+
+<h2>Detalles del Cliente</h2>
+
+<div>
+    <h4>Cliente</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>Nombre</dt>
+        <dd>@Html.DisplayFor(model => model.Nombre)</dd>
+
+        <dt>Apellido</dt>
+        <dd>@Html.DisplayFor(model => model.Apellido)</dd>
+
+        <dt>Dirección</dt>
+        <dd>@Html.DisplayFor(model => model.Direccion)</dd>
+
+        <dt>Teléfono</dt>
+        <dd>@Html.DisplayFor(model => model.Telefono)</dd>
+
+        <dt>Email</dt>
+        <dd>@Html.DisplayFor(model => model.Email)</dd>
+
+        <dt>Fecha de Registro</dt>
+        <dd>@Html.DisplayFor(model => model.FechaRegistro)</dd>
+    </dl>
+</div>
+
+<p>
+    @Html.ActionLink("Editar", "Edit", new { id = Model.ClienteID }) |
+    @Html.ActionLink("Eliminar", "Delete", new { id = Model.ClienteID }) |
+    @Html.ActionLink("Historial de Transacciones", "Historial", new { id = Model.ClienteID })
+</p>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

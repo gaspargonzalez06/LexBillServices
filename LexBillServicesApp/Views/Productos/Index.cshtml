@@ -1,0 +1,111 @@
+﻿@*@model IEnumerable<LexBillServicesApp.Models.Producto>
+
+    @{
+        ViewBag.Title = "Lista de Productos";
+    }
+
+    <h2>Lista de Productos</h2>
+
+    <p>
+        @Html.ActionLink("Crear Nuevo Producto", "Create", null, new { @class = "btn btn-primary" })
+    </p>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Categoría</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => item.Nombre)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Descripcion)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Precio)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Stock)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Categoria.Nombre)</td>
+                    <td>
+                        @Html.ActionLink("Editar", "Edit", new { id = item.ProductoID }, new { @class = "btn btn-warning" }) |
+                        @Html.ActionLink("Detalles", "Details", new { id = item.ProductoID }, new { @class = "btn btn-info" }) |
+                        @Html.ActionLink("Eliminar", "Delete", new { id = item.ProductoID }, new { @class = "btn btn-danger" })
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>*@
+@model IEnumerable<LexBillServicesApp.Models.Producto>
+
+@{
+    ViewBag.Title = "Lista de Productos";
+}
+
+<h2>Lista de Productos</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <p>
+            @Html.ActionLink("Crear Nuevo Producto", "Create", null, new { @class = "btn btn-primary" })
+        </p>
+    </div>
+    <div class="col-md-4">
+        <div class="input-group mb-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Buscar por nombre...">
+        </div>
+    </div>
+</div>
+
+<table id="productosTable" class="table table-striped" style="max-height: 400px; overflow-y: auto;">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Categoría</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Nombre)</td>
+                <td>@Html.DisplayFor(modelItem => item.Descripcion)</td>
+                <td>@Html.DisplayFor(modelItem => item.Precio)</td>
+                <td>@Html.DisplayFor(modelItem => item.Stock)</td>
+                <td>@Html.DisplayFor(modelItem => item.Categoria.Nombre)</td>
+                <td>
+                    @Html.ActionLink("Editar", "Edit", new { id = item.ProductoID }, new { @class = "btn btn-warning" }) |
+                    @Html.ActionLink("Detalles", "Details", new { id = item.ProductoID }, new { @class = "btn btn-info" }) |
+                    @Html.ActionLink("Eliminar", "Delete", new { id = item.ProductoID }, new { @class = "btn btn-danger" })
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#searchInput').keyup(function () {
+                var searchTerm = $(this).val().trim().toLowerCase();
+                var rows = $('#productosTable tbody tr');
+
+                rows.each(function () {
+                    var nombre = $(this).find('td:first').text().trim().toLowerCase();
+                    if (nombre.includes(searchTerm)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+        });
+    </script>
+}

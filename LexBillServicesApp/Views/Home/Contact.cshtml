@@ -1,0 +1,226 @@
+﻿@{
+    ViewBag.Title = "Contact";
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Servicios - Lex Bill Services</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        .col-large {
+            width: 80%;
+            background-color: lightgray;
+            padding: 20px;
+        }
+
+        .col-small {
+            width: 20%;
+            background-color: lightblue;
+            padding: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            padding-top: 60px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+                cursor: pointer;
+            }
+    </style>
+</head>
+<body>
+    <main class="container d-flex">
+        <div class="col-large">
+            <div class="form-row mb-4">
+                <div class="col">
+                    <input type="text" class="form-control" id="search-bar" placeholder="Buscar servicios...">
+                </div>
+                <div class="col">
+                    <select class="form-control" id="category-filter">
+                        <option value="">Todas las categorías</option>
+                        <option value="1">Categoría 1</option>
+                        <option value="2">Categoría 2</option>
+                        <option value="3">Categoría 3</option>
+                    </select>
+                </div>
+            </div>
+            <table class="table table-striped table-light">
+                <thead>
+                    <tr>
+                        <th>ProductoID</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>CategoriaID</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="service-table">
+                    <tr>
+                        <td>1</td>
+                        <td>Servicio 1</td>
+                        <td>Descripción del Servicio 1</td>
+                        <td>$10</td>
+                        <td>100</td>
+                        <td>1</td>
+                        <td>
+                            <button class="btn btn-primary edit-service">Editar</button>
+                            <button class="btn btn-danger delete-service">Eliminar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Servicio 2</td>
+                        <td>Descripción del Servicio 2</td>
+                        <td>$20</td>
+                        <td>50</td>
+                        <td>2</td>
+                        <td>
+                            <button class="btn btn-primary edit-service">Editar</button>
+                            <button class="btn btn-danger delete-service">Eliminar</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-small">
+            <button class="btn btn-success btn-block" id="add-service-button">Agregar Servicio</button>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div id="service-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Agregar/Editar Servicio</h2>
+            <form id="service-form">
+                <div class="form-group">
+                    <label for="service-id">ProductoID</label>
+                    <input type="text" class="form-control" id="service-id" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="service-name">Nombre</label>
+                    <input type="text" class="form-control" id="service-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="service-description">Descripción</label>
+                    <input type="text" class="form-control" id="service-description" required>
+                </div>
+                <div class="form-group">
+                    <label for="service-price">Precio</label>
+                    <input type="number" class="form-control" id="service-price" required>
+                </div>
+                <div class="form-group">
+                    <label for="service-stock">Stock</label>
+                    <input type="number" class="form-control" id="service-stock" required>
+                </div>
+                <div class="form-group">
+                    <label for="service-category">CategoriaID</label>
+                    <select class="form-control" id="service-category">
+                        <option value="1">Categoría 1</option>
+                        <option value="2">Categoría 2</option>
+                        <option value="3">Categoría 3</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" class="btn btn-secondary" id="cancel-button">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const modal = $('#service-modal');
+            const closeModal = () => modal.hide();
+            const openModal = () => modal.show();
+            const resetForm = () => {
+                $('#service-form')[0].reset();
+                $('#service-id').val('');
+            };
+
+            // Open modal on add button click
+            $('#add-service-button').click(() => {
+                resetForm();
+                openModal();
+            });
+
+            // Close modal on cancel button click
+            $('#cancel-button').click(closeModal);
+
+            // Close modal on close (x) button click
+            $('.close').click(closeModal);
+
+            // Handle form submission
+            $('#service-form').submit(function(event) {
+                event.preventDefault();
+                const service = {
+                    id: $('#service-id').val(),
+                    name: $('#service-name').val(),
+                    description: $('#service-description').val(),
+                    price: $('#service-price').val(),
+                    stock: $('#service-stock').val(),
+                    category: $('#service-category').val()
+                };
+                // Add your logic to save the service here (e.g., make an API call)
+                console.log('Saving service:', service);
+                closeModal();
+            });
+
+            // Edit service button click
+            $('.edit-service').click(function() {
+                const row = $(this).closest('tr');
+                $('#service-id').val(row.find('td').eq(0).text());
+                $('#service-name').val(row.find('td').eq(1).text());
+                $('#service-description').val(row.find('td').eq(2).text());
+                $('#service-price').val(row.find('td').eq(3).text().substring(1));
+                $('#service-stock').val(row.find('td').eq(4).text());
+                $('#service-category').val(row.find('td').eq(5).text());
+                openModal();
+            });
+
+            // Delete service button click
+            $('.delete-service').click(function() {
+                const row = $(this).closest('tr');
+                // Add your logic to delete the service here (e.g., make an API call)
+                console.log('Deleting service with ID:', row.find('td').eq(0).text());
+                row.remove();
+            });
+        });
+    </script>
+</body>
+</html>

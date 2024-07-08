@@ -1,0 +1,27 @@
+﻿@model LexBillServicesApp.Models.Cliente
+
+@{
+    ViewBag.Title = "Eliminar Cliente";
+}
+
+<h2>Eliminar Cliente</h2>
+
+<div>
+    <h4>¿Estás seguro de querer eliminar este cliente?</h4>
+    <dl class="dl-horizontal">
+        <dt>Nombre</dt>
+        <dd>@Html.DisplayFor(model => model.Nombre)</dd>
+
+        <!-- Otras propiedades del cliente (Apellido, Dirección, Teléfono, Email, FechaRegistro) -->
+    </dl>
+
+    @using (Html.BeginForm("Delete", "Clientes", new { id = Model.ClienteID }, FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Eliminar" class="btn btn-danger" /> |
+            @Html.ActionLink("Cancelar", "Index")
+        </div>
+    }
+</div>

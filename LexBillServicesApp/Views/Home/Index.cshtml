@@ -1,0 +1,179 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realizar Pedido - Lex Bill Services</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        .col-red {
+            background-color: red;
+            color: white;
+            padding: 20px;
+        }
+
+        .col-blue {
+            background-color: blue;
+            color: white;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <main class="container">
+        <h1 class="text-center my-4">Realizar Pedido - Lex Bill Services</h1>
+        <div class="row">
+            <div class="col-md-6 col-red">
+                <div class="form-group">
+                    <label for="username">Nombre de Usuario</label>
+                    <input type="text" class="form-control" id="username" placeholder="Ingrese nombre de usuario">
+                </div>
+                <div class="form-group">
+                    <label for="id-number">Cédula</label>
+                    <input type="text" class="form-control" id="id-number" placeholder="Ingrese cédula">
+                </div>
+                <div class="form-group">
+                    <label for="search-bar">Buscar Servicios</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search-bar" placeholder="Buscar...">
+                        <div class="input-group-append">
+                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="service-category">Categoría de Servicios</label>
+                    <select class="form-control" id="service-category">
+                        <option>Servicio 1</option>
+                        <option>Servicio 2</option>
+                        <option>Servicio 3</option>
+                    </select>
+                </div>
+                <h3 class="my-4">Lista de Servicios Disponibles</h3>
+                <table class="table table-striped table-light">
+                    <thead>
+                        <tr>
+                            <th>Servicio</th>
+                            <th>Descripción</th>
+                            <th>Precio</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="available-services">
+                        <tr>
+                            <td>Servicio 1</td>
+                            <td>Descripción del Servicio 1</td>
+                            <td>$10</td>
+                            <td><button class="btn btn-success add-service" data-service="Servicio 1" data-price="10">Agregar</button></td>
+                        </tr>
+                        <tr>
+                            <td>Servicio 2</td>
+                            <td>Descripción del Servicio 2</td>
+                            <td>$20</td>
+                            <td><button class="btn btn-success add-service" data-service="Servicio 2" data-price="20">Agregar</button></td>
+                        </tr>
+                        <tr>
+                            <td>Servicio 3</td>
+                            <td>Descripción del Servicio 3</td>
+                            <td>$30</td>
+                            <td><button class="btn btn-success add-service" data-service="Servicio 3" data-price="30">Agregar</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6 col-blue">
+                <div class="form-group">
+                    <label for="currency-selector">Seleccionar Divisa</label>
+                    <select class="form-control" id="currency-selector">
+                        <option>USD</option>
+                        <option>EUR</option>
+                        <option>GBP</option>
+                    </select>
+                </div>
+                <h3 class="my-4">Servicios Seleccionados</h3>
+                <table class="table table-striped table-light">
+                    <thead>
+                        <tr>
+                            <th>Servicio</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Total</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="selected-services">
+                        <!-- Servicios seleccionados se agregarán aquí -->
+                    </tbody>
+                </table>
+                <h4 class="my-4">Total: $<span id="total-amount">0</span></h4>
+            </div>
+        </div>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectedServicesTable = document.getElementById('selected-services');
+            const totalAmountSpan = document.getElementById('total-amount');
+            let totalAmount = 0;
+
+            function updateTotalAmount() {
+                totalAmountSpan.textContent = totalAmount.toFixed(2);
+            }
+
+            function addService(service, price) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${service}</td>
+                    <td><input type="number" class="form-control service-quantity" value="1" min="1"></td>
+                    <td>$${price}</td>
+                    <td class="service-total">$${price}</td>
+                    <td><button class="btn btn-danger remove-service">Eliminar</button></td>
+                `;
+                selectedServicesTable.appendChild(row);
+
+                const quantityInput = row.querySelector('.service-quantity');
+                const serviceTotal = row.querySelector('.service-total');
+                quantityInput.addEventListener('input', () => {
+                    const quantity = parseInt(quantityInput.value);
+                    const total = quantity * price;
+                    serviceTotal.textContent = `$${total.toFixed(2)}`;
+                    calculateTotal();
+                });
+
+                const removeButton = row.querySelector('.remove-service');
+                removeButton.addEventListener('click', () => {
+                    selectedServicesTable.removeChild(row);
+                    calculateTotal();
+                });
+
+                calculateTotal();
+            }
+
+            function calculateTotal() {
+                totalAmount = 0;
+                selectedServicesTable.querySelectorAll('tr').forEach(row => {
+                    const quantity = parseInt(row.querySelector('.service-quantity').value);
+                    const price = parseFloat(row.querySelector('.service-total').textContent.slice(1));
+                    totalAmount += price;
+                });
+                updateTotalAmount();
+            }
+
+            document.querySelectorAll('.add-service').forEach(button => {
+                button.addEventListener('click', () => {
+                    const service = button.getAttribute('data-service');
+                    const price = parseFloat(button.getAttribute('data-price'));
+                    addService(service, price);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+﻿@model LexBillServicesApp.Models.Cliente
+
+@{
+    ViewBag.Title = "Historial de Transacciones";
+}
+
+<h2>Historial de Transacciones</h2>
+
+<h3>Pedidos</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID Pedido</th>
+            <th>Fecha</th>
+            <!-- Otras columnas -->
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var pedido in ViewBag.Pedidos)
+        {
+            <tr>
+                <td>@pedido.PedidoID</td>
+                <td>@pedido.FechaPedido.ToShortDateString()</td>
+                <!-- Otras columnas -->
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h3>Facturas</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID Factura</th>
+            <th>Fecha de Cierre</th>
+            <!-- Otras columnas -->
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var factura in ViewBag.Facturas)
+        {
+            <tr>
+                <td>@factura.FacturaID</td>
+                <td>@factura.FechaCierre.ToShortDateString()</td>
+                <!-- Otras columnas -->
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div>
+    @Html.ActionLink("Volver al Listado", "Index")
+</div>

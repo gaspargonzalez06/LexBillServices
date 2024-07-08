@@ -1,0 +1,77 @@
+﻿@model IEnumerable<LexBillServicesApp.Models.Pedido>
+
+@{
+    ViewBag.Title = "Pedidos Pendientes y Cancelados";
+}
+
+<h2>Pedidos Pendientes y Cancelados</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <h3>Pedidos Pendientes</h3>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Fecha Pedido</th>
+                        <th>Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pedido in ViewBag.PedidosPendientes)
+                    {
+                        <tr>
+                            <td>@pedido.FechaPedido.ToShortDateString()</td>
+                            <td>@pedido.Total.ToString("C")</td>
+                            <td>
+                                @using (Html.BeginForm("CancelarPedido", "VerPedidos", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="pedidoID" value="@pedido.PedidoID" />
+                                    <input type="hidden" name="montoCancelacion" value="@pedido.Total" /> <!-- Muestra el total como monto de cancelación -->
+                                    <button type="submit" class="btn btn-danger">Cancelar Pedido</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (ViewBag.PedidosPendientes == null || !((List<LexBillServicesApp.Models.Pedido>)ViewBag.PedidosPendientes).Any())
+                    {
+                        <tr>
+                            <td colspan="3">No hay pedidos pendientes.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <h3>Pedidos Cancelados</h3>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Fecha Pedido</th>
+                        <th>Total Cancelado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pedido in ViewBag.PedidosCancelados)
+                    {
+                        <tr>
+                            <td>@pedido.FechaPedido.ToShortDateString()</td>
+                            <td>@pedido.Total.ToString("C")</td>
+                        </tr>
+                    }
+                    @if (ViewBag.PedidosCancelados == null || !((List<LexBillServicesApp.Models.Pedido>)ViewBag.PedidosCancelados).Any())
+                    {
+                        <tr>
+                            <td colspan="2">No hay pedidos cancelados.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

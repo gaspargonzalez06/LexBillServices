@@ -1,0 +1,51 @@
+﻿@model LexBillServicesApp.Models.Producto
+
+@{
+    ViewBag.Title = "Crear Nuevo Producto";
+}
+
+<h2>Crear Nuevo Producto</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Nombre, htmlAttributes: new { @class = "control-label" })
+        @Html.EditorFor(model => model.Nombre, new { htmlAttributes = new { @class = "form-control" } })
+        @Html.ValidationMessageFor(model => model.Nombre, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Descripcion, htmlAttributes: new { @class = "control-label" })
+        @Html.EditorFor(model => model.Descripcion, new { htmlAttributes = new { @class = "form-control" } })
+        @Html.ValidationMessageFor(model => model.Descripcion, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Precio, htmlAttributes: new { @class = "control-label" })
+        @Html.EditorFor(model => model.Precio, new { htmlAttributes = new { @class = "form-control" } })
+        @Html.ValidationMessageFor(model => model.Precio, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Stock, htmlAttributes: new { @class = "control-label" })
+        @Html.EditorFor(model => model.Stock, new { htmlAttributes = new { @class = "form-control" } })
+        @Html.ValidationMessageFor(model => model.Stock, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.CategoriaID, "Categoría", htmlAttributes: new { @class = "control-label" })
+        @Html.DropDownListFor(model => model.CategoriaID, ViewBag.Categorias as SelectList, "-- Seleccione una categoría --", new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.CategoriaID, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        <input type="submit" value="Crear" class="btn btn-primary" />
+        @Html.ActionLink("Cancelar", "Index", null, new { @class = "btn btn-default" })
+    </div>
+}
+
+@section scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
